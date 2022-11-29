@@ -29,18 +29,18 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
     
       - name: Terraform Init
-      - id: init
-      - run: terraform init
+        id: init
+        run: terraform init
     
       - name: Terraform Format
-      - id: fmt
-      - run: terraform fmt
+        id: fmt
+        run: terraform fmt
     
       - name: Terraform Validate
         id: validate
         run: terraform validate -no-color
     
       - name: Terraform Plan
-      - id: plan
-      - if: git.event_name == "push"
-      - run: terraform plan -no-color
+        id: plan
+        if: git.event_name == "push"
+        run: terraform plan -no-color
