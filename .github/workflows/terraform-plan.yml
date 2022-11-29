@@ -1,0 +1,50 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Terraform-Plan
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "resume" branch
+  push:
+    branches: [ "resume" ]
+    
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE }}
+        aws-region: ${{ secrets.AWS_REGION }}
+        
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+      
+        cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+    
+    - name: Terraform Init
+    - id: init
+    - run: terraform init
+    
+    - name: Terraform Format
+    - id: fmt
+    - run: terraform fmt
+    
+    - name: Terraform Validate
+      id: validate
+      run: terraform validate -no-color
+    
+    - name: Terraform Plan
+    - id: plan
+    - if: git.event_name == "push"
+    - run: terraform plan -no-color
