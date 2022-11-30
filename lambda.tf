@@ -44,7 +44,7 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
 
 data "archive_file" "zip_python_code" {
   type        = "zip"
-  source_dir  = "${path.module}/Python"
+  source_dir  = "${path.module}/python"
   output_path = "${path.module}/lambda.zip"
 }
 
