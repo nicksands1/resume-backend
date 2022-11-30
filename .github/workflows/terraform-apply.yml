@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Terraform-Plan
+name: Terraform-Apply
 
 on:
   push:
@@ -10,6 +10,10 @@ jobs:
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
+    env:
+     AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+     AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
+     AWS_REGION: 'us-east-1'
     
     permissions:
       id-token: write
