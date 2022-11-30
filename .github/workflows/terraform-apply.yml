@@ -16,7 +16,6 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v3
-      
       - name: set AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
