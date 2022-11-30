@@ -1,29 +1,33 @@
+
+
 import json
 import boto3
 
-client = boto3.client('dynamodb')
+dynamodb = boto3.resource('dynamodb')
+table = dynamodb.Table('visit_table')
 
 def lambda_handler(event, context):
 
-  response = client.update_item(
-        TableName='visit_table',
-        Key = {
-            'visit_count': {'S': 'Quantity'}
-        },
-        UpdateExpression = 'ADD viewCount :inc',
-        ExpressionAttributeValues = {":inc" : {"N": "1"}},
-        ReturnValues = 'UPDATED_NEW'
-        )
-
-  value = response['Attributes']['viewCount']['N']
+    response = table.get_item(Key={
+       'record_id':'visitors'
+    })
     
-  return {      
-            'statusCode': 200,
-            'body': value,
-            'headers':{
-                'Access-Control-Allow-Origin':'*',
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Headers':'*',
-                'Access-Control-Allow-Methods':'OPTIONS'
+    visitor_count = response['Item']['visitor_count']
+    visitor_count = visitor_count + 1
+    print(visitor_count)
+
+    response = table.put_item(Item={
+            'record_id':'visitors',
+            'visitor_count': visitor_count
+    })
+    
+    response = {
+      'statusCode': 200,
+      'body': visitor_count,
+      'headers' : {
+        'Access-Control-Allow-Origin': '*'
+      }
+              
             }
-    }
+  
+    return response
