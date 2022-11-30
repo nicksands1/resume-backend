@@ -1,102 +1,53 @@
-resource "aws_api_gateway_rest_api" "cloud_api" {
-  name        = "CloudResumeChallenge"
-  description = "API to call the Lambda function for the Cloud Resume Challenge"
+resource "aws_apigatewayv2_api" "record-update" {
+  name          = "myCRCapi"
+  protocol_type = "HTTP"
 }
 
-resource "aws_api_gateway_resource" "cloud_api" {
-  rest_api_id = aws_api_gateway_rest_api.cloud_api.id
-  parent_id   = aws_api_gateway_rest_api.cloud_api.root_resource_id
-  path_part   = "CloudResumeChallenge"
-}
+resource "aws_apigatewayv2_stage" "dev" {
+  api_id = aws_apigatewayv2_api.record-update.id
 
-resource "aws_api_gateway_method" "options" {
-  rest_api_id   = aws_api_gateway_rest_api.cloud_api.id
-  resource_id   = aws_api_gateway_resource.cloud_api.id
-  http_method   = "OPTIONS"
-  authorization = "NONE"
-}
+  name        = "dev"
+  auto_deploy = true
 
-resource "aws_api_gateway_method_response" "options" {
-  rest_api_id = aws_api_gateway_rest_api.cloud_api.id
-  resource_id = aws_api_gateway_resource.cloud_api.id
-  http_method = aws_api_gateway_method.options.http_method
-  status_code = 200
-  response_models = {
-    "application/json" = "Empty"
+  default_route_settings {
+    throttling_burst_limit = 10
+    throttling_rate_limit = 10
   }
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = true,
-    "method.response.header.Access-Control-Allow-Methods" = true,
-    "method.response.header.Access-Control-Allow-Origin"  = true
-  }
-  depends_on = [aws_api_gateway_method.options]
 }
 
-resource "aws_api_gateway_integration" "options" {
-  rest_api_id = aws_api_gateway_rest_api.cloud_api.id
-  resource_id = aws_api_gateway_resource.cloud_api.id
-  http_method = aws_api_gateway_method.options.http_method
-  type        = "MOCK"
-  request_templates = {
-    "application/json" : "{\"statusCode\": 200}"
-  }
-  passthrough_behavior = "WHEN_NO_MATCH"
-  depends_on           = [aws_api_gateway_method.options]
+
+
+resource "aws_apigatewayv2_integration" "lambda_crc" {
+  api_id = aws_apigatewayv2_api.record-update.id
+
+  integration_uri    = aws_lambda_function.viewCountIncrement.invoke_arn
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
 }
 
-resource "aws_api_gateway_integration_response" "options" {
-  rest_api_id = aws_api_gateway_rest_api.cloud_api.id
-  resource_id = aws_api_gateway_resource.cloud_api.id
-  http_method = aws_api_gateway_method.options.http_method
-  status_code = aws_api_gateway_method_response.options.status_code
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'",
-    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
-  }
-  depends_on = [aws_api_gateway_method_response.options]
+resource "aws_apigatewayv2_route" "get_lambda" {
+  api_id = aws_apigatewayv2_api.record-update.id
+
+  route_key = "GET /lambda_function_CRC"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_crc.id}"
 }
 
-resource "aws_api_gateway_method" "post" {
-  rest_api_id   = aws_api_gateway_rest_api.cloud_api.id
-  resource_id   = aws_api_gateway_resource.cloud_api.id
-  http_method   = "POST"
-  authorization = "NONE"
+resource "aws_apigatewayv2_route" "post_lambda" {
+  api_id = aws_apigatewayv2_api.record-update.id
+
+  route_key = "POST /lambda_function_CRC"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda_crc.id}"
 }
 
-resource "aws_api_gateway_method_response" "post" {
-  rest_api_id = aws_api_gateway_rest_api.cloud_api.id
-  resource_id = aws_api_gateway_resource.cloud_api.id
-  http_method = aws_api_gateway_method.post.http_method
-  status_code = 200
-  response_models = {
-    "application/json" = "Empty"
-  }
-  response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
-  }
-  depends_on = [aws_api_gateway_method.post]
-}
-
-resource "aws_api_gateway_integration" "integration" {
-  rest_api_id             = aws_api_gateway_rest_api.cloud_api.id
-  resource_id             = aws_api_gateway_resource.cloud_api.id
-  http_method             = "POST"
-  type                    = "AWS_PROXY"
-  integration_http_method = "POST"
-  uri                     = aws_lambda_function.viewCountIncrement.invoke_arn
-  depends_on              = [aws_api_gateway_method.post, aws_lambda_function.viewCountIncrement]
-}
-
-resource "aws_api_gateway_deployment" "deployment" {
-  rest_api_id = aws_api_gateway_rest_api.cloud_api.id
-  stage_name  = "prod"
-  depends_on  = [aws_api_gateway_integration.integration]
-}
-
-resource "aws_lambda_permission" "apigw" {
+resource "aws_lambda_permission" "api_gw" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.viewCountIncrement.arn
+  function_name = aws_lambda_function.viewCountIncrement.function_name
   principal     = "apigateway.amazonaws.com"
+
+  source_arn = "${aws_apigatewayv2_api.record-update.execution_arn}/*/*"
+}
+
+output "api_base_url" {
+  value = aws_apigatewayv2_stage.dev.invoke_url
 }
