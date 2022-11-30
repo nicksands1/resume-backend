@@ -13,7 +13,6 @@ def lambda_handler(event, context):
     response = table.put_item(Item={
             'record_id':'0',
             'visitor_count': visitor_count
-    }
+    })
     return "Records added successfully!"
-    )
     
