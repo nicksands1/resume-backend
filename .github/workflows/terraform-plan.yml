@@ -10,6 +10,10 @@ jobs:
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: terraform
     env:
      AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
      AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
