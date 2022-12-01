@@ -30,8 +30,7 @@ data "archive_file" "zip_python_code" {
 resource "aws_lambda_function" "test_lambda" {
 
 depends_on = [
-    aws_iam_role_policy_attachment.lambda_logs,
-    aws_cloudwatch_log_group.example,
+    aws_iam_role_policy_attachment.lambda_logs
   ]
 
 
@@ -54,11 +53,7 @@ depends_on = [
 
 
 
-#Cloudwatch Logs
-resource "aws_cloudwatch_log_group" "example" {
-  name              = "/aws/lambda/${var.lambda_function_name}"
-  retention_in_days = 14
-}
+
 
 
 resource "aws_iam_policy" "lambda_logging" {

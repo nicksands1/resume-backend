@@ -1,5 +1,4 @@
-import boto3
-import json
+import json, boto3
 
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('visitors')
