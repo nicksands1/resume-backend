@@ -1,26 +1,27 @@
-resource "aws_dynamodb_table" "visit_table" {
-  name           = "visit_table"
-  billing_mode   = "PROVISIONED"
-  read_capacity  = 5
-  write_capacity = 5
-  hash_key       = "record_id"
+resource "aws_dynamodb_table" "resume_table" {
+  name         = "visitors"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "ID"
+
 
   attribute {
-    name = "record_id"
+    name = "ID"
     type = "S"
   }
 }
 
+resource "aws_dynamodb_table_item" "event_test" {
+  table_name = aws_dynamodb_table.resume_table.name
+  hash_key   = aws_dynamodb_table.resume_table.hash_key
 
+  lifecycle {
+    ignore_changes = all
+  }
 
-resource "aws_dynamodb_table_item" "visitors" {
-
-  table_name = aws_dynamodb_table.visit_table.name
-  hash_key = aws_dynamodb_table.visit_table.hash_key
   item = <<ITEM
-  {
-      "record_id": {"S": "visitors"},
-      "visitor_count": {"N": "1"}
-  }  
-  ITEM
+{
+  "ID": {"S": "visitors"},
+  "Numbers":{"S":"0"}
+}
+ITEM
 }
