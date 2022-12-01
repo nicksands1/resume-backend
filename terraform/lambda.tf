@@ -29,12 +29,6 @@ data "archive_file" "zip_python_code" {
 
 resource "aws_lambda_function" "test_lambda" {
 
-  depends_on = [
-    aws_iam_role_policy_attachment.lambda_logs
-  ]
-
-
-
   filename      = "lambda_function.zip"
   function_name = "test-function"
   role          = aws_iam_role.iam_for_lambda.arn
